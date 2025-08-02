@@ -1,0 +1,80 @@
+package com.movies.mdbs.bootstrap;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.movies.mdbs.entities.Movie;
+import com.movies.mdbs.entities.Rating;
+import com.movies.mdbs.repository.MovieRepository;
+import com.movies.mdbs.repository.RatingRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import java.time.LocalDate;
+
+
+@Component
+public class MdbsSeederMovie implements CommandLineRunner {
+
+    private final MovieRepository movieRepository;
+    private final RatingRepository ratingRepository;
+
+    double m = 1000;
+    double C = 7.0;
+
+    public MdbsSeederMovie(MovieRepository movieRepository,RatingRepository ratingRepository){
+          this.movieRepository = movieRepository;
+          this.ratingRepository = ratingRepository;
+    }
+    @Override
+    public void run(String... args) throws Exception {
+        String apiKey = "9cfec7baa834bca86cf3e32123b031d4";
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper mapper = new ObjectMapper();
+
+
+        for (int page = 1; page <= 10; page++) {
+            String url = "https://api.themoviedb.org/3/movie/popular?api_key=" + apiKey + "&page=" + page;
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            JsonNode root = mapper.readTree(response.getBody()).get("results");
+
+            for (JsonNode node : root) {
+                //  getting fields for movie entity
+                String title = node.get("title").asText();
+                String description = node.get("overview").asText();
+                String release = node.get("release_date").asText();
+                LocalDate releaseDate;
+
+                // getting  fields for rating entity
+                double popularity = node.get("popularity").asDouble();
+                double voteAverage = node.get("vote_average").asDouble();
+                double voteCount = node.get("vote_count").asDouble();
+
+                try {
+                    releaseDate = LocalDate.parse(release);
+
+                } catch (Exception e) {
+                    releaseDate = LocalDate.now();
+                }
+                 if(!movieRepository.existsByTitleAndReleaseDate(title,releaseDate)){
+                     Rating rating = new Rating(popularity,voteAverage,voteCount,computeWeightedRating(voteAverage,voteCount,C,m));
+                     ratingRepository.save(rating);
+                     Movie movie = new Movie(title,description,releaseDate,rating);
+                     movieRepository.save(movie);
+
+                 }
+
+
+
+            }
+        }
+
+    }
+
+    // A helper method to compute rating 1 to 10
+    private double computeWeightedRating(double R,double v,double C,double m){
+        return  (v / (v + m)) * R + (m / (v + m)) * C;
+    }
+
+    }
+
+
