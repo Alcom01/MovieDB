@@ -2,6 +2,9 @@ package com.movies.mdbs.service;
 
 import com.movies.mdbs.dto.MovieRatingDTO;
 import com.movies.mdbs.entities.Movie;
+import com.movies.mdbs.exceptions.InvalidRatingException;
+import com.movies.mdbs.exceptions.MovieAlreadyExistsException;
+import com.movies.mdbs.exceptions.TitleNotFoundException;
 import com.movies.mdbs.repository.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,7 +72,7 @@ public class MovieService {
     public void  addMovie(Movie movie) throws Exception {
         Optional<Movie>  film = movieRepository.findById(movie.getId());
         if(film.isPresent()){
-            throw new Exception("Movie already exists!!");
+            throw new MovieAlreadyExistsException("Movie already exists!!");
         }
         movieRepository.save(movie);
     }
@@ -77,7 +80,7 @@ public class MovieService {
         Optional<Movie> film = movieRepository.findByTitle(title);
 
         if(film.isEmpty()){
-            throw new Exception("Movie does not exists.");
+            throw new TitleNotFoundException("Movie does not exists.");
         }else{
             movieRepository.delete(film.get());
 
@@ -96,6 +99,9 @@ public class MovieService {
                 if(movie.getWeightedRating() >= rating){
                       moviesRated.add(movie);
                 }
+          }
+          if (moviesRated.isEmpty()){
+              throw new InvalidRatingException("There is no movies within specified rate range.");
           }
           return moviesRated;
          }

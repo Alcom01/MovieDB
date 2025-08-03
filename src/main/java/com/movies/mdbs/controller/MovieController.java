@@ -35,7 +35,12 @@ public class MovieController {
     }
     @PostMapping("/add-movie/{Movie}")
     public void addMovie(@RequestBody Movie movie) throws Exception {
-        movieService.addMovie(movie);
+         Movie movie1 = new Movie();
+         movie1.setTitle(movie.getTitle());
+         movie1.setDescription(movie.getDescription());
+         movie1.setReleaseDate(movie1.getReleaseDate());
+         movie1.setRating(movie1.getRating());
+         movieService.addMovie(movie1);
 
     }
 
