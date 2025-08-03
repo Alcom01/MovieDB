@@ -5,18 +5,24 @@ import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.entities.Rating;
 import com.movies.mdbs.repository.MovieRepository;
 import com.movies.mdbs.repository.RatingRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 
 
+@PropertySource("classpath:env.properties")
 @Component
 public class MdbsSeederMovie implements CommandLineRunner {
 
     private final MovieRepository movieRepository;
     private final RatingRepository ratingRepository;
+
+    @Value("${tmdb.api.key}")
+            private String apiKey;
 
     double m = 1000;
     double C = 7.0;
@@ -27,7 +33,6 @@ public class MdbsSeederMovie implements CommandLineRunner {
     }
     @Override
     public void run(String... args) throws Exception {
-        String apiKey = "9cfec7baa834bca86cf3e32123b031d4";
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper mapper = new ObjectMapper();
 
