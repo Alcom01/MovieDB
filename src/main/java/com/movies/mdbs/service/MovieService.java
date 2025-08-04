@@ -1,8 +1,8 @@
 package com.movies.mdbs.service;
-
 import com.movies.mdbs.dto.MovieRatingDTO;
 import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.exceptions.InvalidRatingException;
+import com.movies.mdbs.exceptions.InvalidYearException;
 import com.movies.mdbs.exceptions.MovieAlreadyExistsException;
 import com.movies.mdbs.exceptions.TitleNotFoundException;
 import com.movies.mdbs.repository.MovieRepository;
@@ -14,6 +14,8 @@ import java.util.List;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+
 
 
 @Service
@@ -53,20 +55,41 @@ public class MovieService {
 
 
     public List<MovieRatingDTO> getMoviesByTitle(String title){
-        return movieRepository.findAll()
-                .stream()
-                .map(this::convertEntityToDTO)
-                .filter(movie -> movie.getTitle().toLowerCase().contains(title.toLowerCase()))
-                .collect(Collectors.toList());
+            List<MovieRatingDTO> movieDto= movieRepository.findAll()
+                    .stream()
+                    .map(this::convertEntityToDTO)
+                    .filter(movie -> movie.getTitle().toLowerCase().contains(title.toLowerCase()))
+                    .toList();
+
+            if(movieDto.isEmpty()){
+                 throw new TitleNotFoundException("Title not found!!!");
+            }
+
+            return movieDto;
+
+
     }
 
 
     public  List<MovieRatingDTO> getMoviesByYear(String year) {
-        return movieRepository.findAll()
+        // checking if entered year is empty or contains only whitespaces
+        if(isEmptyOrNull(year)){
+            throw new InvalidYearException("Year cannot be empty or blank.");
+        }
+        // preventing user to enter alphabetic characters
+            if(containsChar(year)){
+                throw new InvalidYearException("Year cannot contain letters.");
+            }
+
+        List<MovieRatingDTO> movieRatingDTOList = movieRepository.findAll()
                 .stream()
                 .map(this::convertEntityToDTO)
                 .filter(movie -> movie.getReleaseDate().toString().toLowerCase().contains(year.toLowerCase()))
-                .collect(Collectors.toList());
+                .toList();
+           if(movieRatingDTOList.isEmpty()){
+               throw new InvalidYearException("There is no movie exists by given year.");
+           }
+           return  movieRatingDTOList;
     }
 
     public void  addMovie(Movie movie) throws Exception {
@@ -83,15 +106,23 @@ public class MovieService {
             throw new TitleNotFoundException("Movie does not exists.");
         }else{
             movieRepository.delete(film.get());
-
         }
     }
 
      public List<MovieRatingDTO> getByRating(String weightedRating){
+        if(isEmptyOrNull(weightedRating)){
+            throw new InvalidRatingException("Rating cannot be empty.");
+        }
+
+         if(containsChar(weightedRating)){
+             throw new InvalidRatingException("Rating cannot contain letters.");
+         }
+
           List<MovieRatingDTO> allMovies = movieRepository.findAll()
                   .stream()
                   .map(this::convertEntityToDTO)
                   .toList();
+
             Double rating = Double.valueOf(weightedRating);
 
           List<MovieRatingDTO> moviesRated = new ArrayList<>();
@@ -100,10 +131,25 @@ public class MovieService {
                       moviesRated.add(movie);
                 }
           }
-          if (moviesRated.isEmpty()){
+          if (moviesRated.isEmpty() ){
               throw new InvalidRatingException("There is no movies within specified rate range.");
           }
+
           return moviesRated;
+         }
+
+         //helper method that checks number field contains character if it does return true.
+         public boolean containsChar(String text){
+             char[] charArr = text.toCharArray();
+             for(char c : charArr){
+                 if(Character.isLetter(c) || !Character.isDigit(c) ){
+                     return true;
+                 }
+             }
+             return false;
+         }
+         public boolean isEmptyOrNull(String text){
+             return text == null || text.trim().isEmpty();
          }
 
     }

@@ -13,7 +13,7 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(value = {InvalidRatingException.class})
-    public ResponseEntity<Object> handleInvalidSwiftCodeException(InvalidRatingException ex){
+    public ResponseEntity<Object> handleInvalidRatingException(InvalidRatingException ex){
         // Creating a custom Payload
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
         InvalidRatingBody invalidRatingBody =  new InvalidRatingBody(
@@ -57,4 +57,5 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(movieAlreadyExistsBody,alreadyExists);
     }
+
 }

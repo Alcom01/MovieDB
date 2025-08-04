@@ -1,5 +1,4 @@
 package com.movies.mdbs.controller;
-
 import com.movies.mdbs.dto.MovieRatingDTO;
 import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.service.MovieService;
@@ -33,13 +32,13 @@ public class MovieController {
     public List<MovieRatingDTO> getByYear(@PathVariable String year){
         return movieService.getMoviesByYear(year);
     }
-    @PostMapping("/add-movie/{Movie}")
+    @PostMapping("/add-movie")
     public void addMovie(@RequestBody Movie movie) throws Exception {
          Movie movie1 = new Movie();
          movie1.setTitle(movie.getTitle());
          movie1.setDescription(movie.getDescription());
-         movie1.setReleaseDate(movie1.getReleaseDate());
-         movie1.setRating(movie1.getRating());
+         movie1.setReleaseDate(movie.getReleaseDate());
+         movie1.setRating(movie.getRating());
          movieService.addMovie(movie1);
 
     }
