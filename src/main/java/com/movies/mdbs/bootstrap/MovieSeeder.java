@@ -16,7 +16,7 @@ import java.time.LocalDate;
 
 @PropertySource("classpath:env.properties")
 @Component
-public class MdbsSeederMovie implements CommandLineRunner {
+public class MovieSeeder implements CommandLineRunner {
 
     private final MovieRepository movieRepository;
     private final RatingRepository ratingRepository;
@@ -27,7 +27,7 @@ public class MdbsSeederMovie implements CommandLineRunner {
     double m = 1000;
     double C = 7.0;
 
-    public MdbsSeederMovie(MovieRepository movieRepository,RatingRepository ratingRepository){
+    public MovieSeeder(MovieRepository movieRepository, RatingRepository ratingRepository){
           this.movieRepository = movieRepository;
           this.ratingRepository = ratingRepository;
     }

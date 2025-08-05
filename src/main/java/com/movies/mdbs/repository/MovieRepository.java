@@ -9,7 +9,6 @@ import java.util.Optional;
 @Repository
 public interface MovieRepository  extends JpaRepository<Movie,Long> {
     boolean existsByTitleAndReleaseDate(String title, LocalDate releaseDate);
-    Optional<Movie>findByTitleAndReleaseDate(String title,LocalDate releaseDate);
     Optional<Movie>findByTitle(String title);
 
 

@@ -1,10 +1,7 @@
 package com.movies.mdbs.service;
 import com.movies.mdbs.dto.MovieRatingDTO;
 import com.movies.mdbs.entities.Movie;
-import com.movies.mdbs.exceptions.InvalidRatingException;
-import com.movies.mdbs.exceptions.InvalidYearException;
-import com.movies.mdbs.exceptions.MovieAlreadyExistsException;
-import com.movies.mdbs.exceptions.TitleNotFoundException;
+import com.movies.mdbs.exceptions.*;
 import com.movies.mdbs.repository.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,10 +41,14 @@ public class MovieService {
 
 
     public List<MovieRatingDTO> getAllMovies(){
-        return movieRepository.findAll()
+        List<MovieRatingDTO> allMovies = movieRepository.findAll()
                 .stream()
                 .map(this::convertEntityToDTO)
-                .collect(Collectors.toList());
+                .toList();
+        if(allMovies.isEmpty()){
+            throw new MoviesNotFoundException("There is no movie in database");
+        }
+        return allMovies;
 
     }
 
@@ -55,6 +56,9 @@ public class MovieService {
 
 
     public List<MovieRatingDTO> getMoviesByTitle(String title){
+           if(isEmptyOrNull(title)){
+               throw new TitleNotFoundException("Title Cannot Be empty or null");
+           }
             List<MovieRatingDTO> movieDto= movieRepository.findAll()
                     .stream()
                     .map(this::convertEntityToDTO)
@@ -77,7 +81,7 @@ public class MovieService {
             throw new InvalidYearException("Year cannot be empty or blank.");
         }
         // preventing user to enter alphabetic characters
-            if(containsChar(year)){
+            if(containsChar(year) ){
                 throw new InvalidYearException("Year cannot contain letters.");
             }
 
@@ -140,9 +144,12 @@ public class MovieService {
 
          //helper method that checks number field contains character if it does return true.
          public boolean containsChar(String text){
+          if( !text.matches("^\\d+(\\.\\d+)?$")){
+              return true;
+          }
              char[] charArr = text.toCharArray();
              for(char c : charArr){
-                 if(Character.isLetter(c) || !Character.isDigit(c) ){
+                 if(Character.isLetter(c) || !Character.isDigit(c)){
                      return true;
                  }
              }

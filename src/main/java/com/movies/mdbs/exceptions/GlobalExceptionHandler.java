@@ -57,5 +57,15 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(movieAlreadyExistsBody,alreadyExists);
     }
+    @ExceptionHandler(value = {MoviesNotFoundException.class})
+    public ResponseEntity<Object> handleMoviesNotFoundException(MoviesNotFoundException ex){
+        HttpStatus notFound = HttpStatus.NOT_FOUND;
+        MoviesNotFoundBody moviesNotFoundBody = new MoviesNotFoundBody(
+                ex.getMessage(),
+                notFound,
+                ZonedDateTime.now()
+        );
+        return new ResponseEntity<>(moviesNotFoundBody,notFound);
+    }
 
 }
