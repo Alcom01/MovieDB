@@ -8,9 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 
@@ -102,6 +100,13 @@ public class MovieService {
       if(film.isPresent()){
           throw new MovieAlreadyExistsException("Entered movie already exists.");
       }
+      if(movie.getTitle().isEmpty()){
+          throw new MovieAlreadyExistsException("Title cannot be empty.");
+      }
+      if(movie.getReleaseDate() == null ){
+          throw new MovieAlreadyExistsException("Release date cannot be empty");
+      }
+
       movieRepository.save(movie);
     }
 

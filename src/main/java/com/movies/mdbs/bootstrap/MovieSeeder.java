@@ -61,23 +61,15 @@ public class MovieSeeder implements CommandLineRunner {
                     releaseDate = LocalDate.now();
                 }
                  if(!movieRepository.existsByTitleAndReleaseDate(title,releaseDate)){
-                     Rating rating = new Rating(popularity,voteAverage,voteCount,computeWeightedRating(voteAverage,voteCount,C,m));
+                     Rating rating = new Rating(popularity,voteAverage,voteCount);
                      ratingRepository.save(rating);
                      Movie movie = new Movie(title,description,releaseDate,rating);
                      movieRepository.save(movie);
 
                  }
-
-
-
             }
         }
 
-    }
-
-    // A helper method to compute rating 1 to 10
-    private double computeWeightedRating(double R,double v,double C,double m){
-        return  (v / (v + m)) * R + (m / (v + m)) * C;
     }
 
     }
