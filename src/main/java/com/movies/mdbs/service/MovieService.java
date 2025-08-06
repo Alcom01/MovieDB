@@ -97,20 +97,24 @@ public class MovieService {
     }
 
     public void  addMovie(Movie movie) throws Exception {
-        Optional<Movie>  film = movieRepository.findById(movie.getId());
-        if(film.isPresent()){
-            throw new MovieAlreadyExistsException("Movie already exists!!");
-        }
-        movieRepository.save(movie);
-    }
-    public void  deleteMovie(String title) throws Exception {
-        Optional<Movie> film = movieRepository.findByTitle(title);
 
-        if(film.isEmpty()){
-            throw new TitleNotFoundException("Movie does not exists.");
+      Optional<Movie> film = movieRepository.findByTitle(movie.getTitle());
+      if(film.isPresent()){
+          throw new MovieAlreadyExistsException("Entered movie already exists.");
+      }
+      movieRepository.save(movie);
+    }
+
+    public void  deleteMovie(String title) throws Exception {
+        Optional<Movie> movie = movieRepository.findByTitle(title);
+
+        if(movie.isPresent()){
+            movieRepository.delete(movie.get());
         }else{
-            movieRepository.delete(film.get());
+            throw new TitleNotFoundException("There is no movie with given title");
         }
+
+
     }
 
      public List<MovieRatingDTO> getByRating(String weightedRating){
@@ -144,16 +148,8 @@ public class MovieService {
 
          //helper method that checks number field contains character if it does return true.
          public boolean containsChar(String text){
-          if( !text.matches("^\\d+(\\.\\d+)?$")){
-              return true;
-          }
-             char[] charArr = text.toCharArray();
-             for(char c : charArr){
-                 if(Character.isLetter(c) || !Character.isDigit(c)){
-                     return true;
-                 }
-             }
-             return false;
+           return !text.matches("^\\d+(\\.\\d+)?$");
+
          }
          public boolean isEmptyOrNull(String text){
              return text == null || text.trim().isEmpty();

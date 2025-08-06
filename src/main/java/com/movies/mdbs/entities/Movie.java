@@ -18,13 +18,15 @@ public class Movie {
     private LocalDate releaseDate;
 
     @OneToOne
-    @JoinColumn(name = "rating_id",nullable = false,unique = true)
+    @JoinColumn(name = "rating_id", nullable = false, unique = true)
     private Rating rating;
 
-    public Movie(String title, String description, LocalDate releaseDate,Rating rating) {
+    public Movie(String title, String description, LocalDate releaseDate, Rating rating) {
         this.title = title;
         this.description = description;
         this.releaseDate = releaseDate;
         this.rating = rating;
+
     }
 }
+

@@ -30,4 +30,7 @@ public class Rating {
         this.weightedRating = weightedRating;
 
     }
+    private double computeWeightedRating(double R,double v,double C,double m){
+        return  (v / (v + m)) * R + (m / (v + m)) * C;
+    }
 }

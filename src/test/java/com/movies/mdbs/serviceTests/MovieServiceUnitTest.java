@@ -5,6 +5,7 @@ import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.entities.Rating;
 import com.movies.mdbs.exceptions.*;
 import com.movies.mdbs.repository.MovieRepository;
+import com.movies.mdbs.repository.RatingRepository;
 import com.movies.mdbs.service.MovieService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,10 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +29,8 @@ import static org.mockito.Mockito.when;
 public class MovieServiceUnitTest {
     @Mock
    private MovieRepository movieRepository;
+
+
 
     @InjectMocks
     private MovieService movieService;
@@ -119,11 +124,10 @@ public class MovieServiceUnitTest {
 
     @Test
     void getMoviesByTitle_shouldThrowExceptionIfTitleIsEmptyOrNull(){
-        //Arrange
-        when(movieRepository.findAll()).thenReturn(List.of(movie));
 
         //Assert & Throw
          assertThrows(TitleNotFoundException.class ,()-> movieService.getMoviesByTitle(""));
+         assertThrows(TitleNotFoundException.class,() -> movieService.getMoviesByTitle(null));
 
 
     }
@@ -175,26 +179,49 @@ public class MovieServiceUnitTest {
     }
     @Test
     void addMovie_ShouldAddMovieIfIsNotPresent() throws Exception {
-        when(movieRepository.findAll()).thenReturn(List.of(movie));
+        // mocks dont store changes automatically so i have create fakeDb which will serve as database.
+       List<Movie> fakeDb = new ArrayList<>();
+       fakeDb.add(movie);
+
+       when(movieRepository.findAll()).thenAnswer(invocation -> new ArrayList<>(fakeDb));
+       when(movieRepository.save(any(Movie.class))).thenAnswer(invocation ->{
+              Movie m = invocation.getArgument(0);
+              fakeDb.add(m);
+              return m;
+               }
+               );
 
         double weightedRating =  (100.0/ (100.0 + 1000.0)) * 1500.0 + (1000.0 / (1000.0 + 1000.0)) * 7.0;
-        Movie movie1 = new Movie("Shame","A guy who is chronically depressed",LocalDate.of(2013,Month.FEBRUARY,3),
-                new Rating(5000.0,1500.0,100.0,weightedRating));
 
+        Rating rating1 = new Rating();
+        rating1.setId(2L);
+        rating1.setPopularity(5000.0);
+        rating1.setVoteAverage(1500.0);
+        rating1.setVoteCount(100.0);
+        rating1.setWeightedRating(weightedRating);
+
+        Movie movie1 = new Movie();
+        movie1.setId(2L);
+        movie1.setTitle("Shame");
+        movie1.setDescription("A guy who is chronically depressed");
+        movie1.setReleaseDate( LocalDate.of(2013,Month.FEBRUARY,3));
+        movie1.setRating(rating1);
 
         movieService.addMovie(movie1);
+
         var result = movieService.getAllMovies();
 
         assertAll(() -> assertEquals(2,result.size()),
-                  () ->assertEquals("Shame",result.get(1).getTitle()));
+                  () -> assertEquals("Shame",result.get(1).getTitle()));
 
         verify(movieRepository).save(movie1);
 
     }
     @Test
     void addMovie_ShouldThrowExceptionIfMovieIsPresent(){
-        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
-        assertThrows(MovieAlreadyExistsException.class, () ->movieService.addMovie(movie));
+        when(movieRepository.findByTitle("SAW")).thenReturn(Optional.of(movie));
+
+        assertThrows(MovieAlreadyExistsException.class, () -> movieService.addMovie(movie));
     }
 
     @Test
@@ -219,7 +246,8 @@ public class MovieServiceUnitTest {
 
         var result = movieService.getAllMovies();
 
-        var  ratedMovies = movieService.getByRating(String.valueOf(result.get(0).getWeightedRating()));
+         double rating = result.get(0).getWeightedRating();
+        var  ratedMovies = movieService.getByRating(Double.toString(rating));
 
         assertAll(() -> assertEquals("SAW",ratedMovies.get(0).getTitle()),
                   () -> assertEquals(1,result.size())
