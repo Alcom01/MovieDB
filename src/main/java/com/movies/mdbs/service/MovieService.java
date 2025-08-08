@@ -156,6 +156,7 @@ public class MovieService {
            return !text.matches("^\\d+(\\.\\d+)?$");
 
          }
+       //helper method that checks  field contains space or is null,if it does return true.
          public boolean isEmptyOrNull(String text){
              return text == null || text.trim().isEmpty();
          }

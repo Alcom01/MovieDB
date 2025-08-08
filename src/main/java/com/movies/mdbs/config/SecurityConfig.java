@@ -14,7 +14,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/v1/tmdbs-movies/**",   // Swagger'dan gelen tüm endpoint'lere izin ver
+                                "/v1/tmdbs-movies/**",   // authenticate all requests from swagger.
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
