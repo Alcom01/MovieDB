@@ -13,6 +13,7 @@ public class MovieController {
 
     @Autowired
     private MovieService movieService;
+
     public MovieController(MovieService movieService){
         this.movieService = movieService;
     }
@@ -52,6 +53,10 @@ public class MovieController {
         public List<MovieRatingDTO> getMovieByRating(@PathVariable String weightedRating){
           return movieService.getByRating(weightedRating);
 
+        }
+        @GetMapping("/by-director/{name}")
+     public List<MovieRatingDTO> getMoviesByDirectorName(@PathVariable String name){
+        return movieService.getMoviesByDirector(name);
         }
     }
 

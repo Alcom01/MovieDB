@@ -3,6 +3,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.entities.Rating;
+import com.movies.mdbs.repository.DirectorRepository;
 import com.movies.mdbs.repository.MovieRepository;
 import com.movies.mdbs.repository.RatingRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,6 @@ import java.time.LocalDate;
 public class MovieSeeder implements CommandLineRunner {
 
     private final MovieRepository movieRepository;
-    private final RatingRepository ratingRepository;
 
     @Value("${tmdb.api.key}")
             private String apiKey;
@@ -27,9 +27,9 @@ public class MovieSeeder implements CommandLineRunner {
     double m = 1000;
     double C = 7.0;
 
-    public MovieSeeder(MovieRepository movieRepository, RatingRepository ratingRepository){
+    public MovieSeeder(MovieRepository movieRepository){
           this.movieRepository = movieRepository;
-          this.ratingRepository = ratingRepository;
+
     }
     @Override
     public void run(String... args) throws Exception {
@@ -47,6 +47,7 @@ public class MovieSeeder implements CommandLineRunner {
                 String title = node.get("title").asText();
                 String description = node.get("overview").asText();
                 String release = node.get("release_date").asText();
+                Long tmdbId = node.get("id").asLong();
                 LocalDate releaseDate;
 
                 // getting  fields for rating entity
@@ -62,8 +63,8 @@ public class MovieSeeder implements CommandLineRunner {
                 }
                  if(!movieRepository.existsByTitleAndReleaseDate(title,releaseDate)){
                      Rating rating = new Rating(popularity,voteAverage,voteCount);
-                     ratingRepository.save(rating);
-                     Movie movie = new Movie(title,description,releaseDate,rating);
+                    // ratingRepository.save(rating);
+                     Movie movie = new Movie(title,description,releaseDate,rating,tmdbId);
                      movieRepository.save(movie);
 
                  }

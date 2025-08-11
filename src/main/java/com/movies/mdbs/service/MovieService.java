@@ -3,6 +3,7 @@ import com.movies.mdbs.dto.MovieRatingDTO;
 import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.exceptions.*;
 import com.movies.mdbs.repository.MovieRepository;
+import com.movies.mdbs.repository.RatingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +20,14 @@ public class MovieService {
 
 
 
+
     @Autowired
     public MovieService(MovieRepository movieRepository){
         this.movieRepository = movieRepository;
 
+
     }
+
     private MovieRatingDTO convertEntityToDTO(Movie movie){
         MovieRatingDTO movieRatingDTO = new MovieRatingDTO();
         movieRatingDTO.setMovieId(movie.getId());
@@ -32,10 +36,12 @@ public class MovieService {
         movieRatingDTO.setReleaseDate(movie.getReleaseDate());
         movieRatingDTO.setPopularity(movie.getRating().getPopularity());
         movieRatingDTO.setWeightedRating(movie.getRating().getWeightedRating());
+        movieRatingDTO.setDirectors(movie.getDirectors());
 
          return movieRatingDTO;
 
     }
+
 
 
     public List<MovieRatingDTO> getAllMovies(){
@@ -106,6 +112,9 @@ public class MovieService {
       if(movie.getReleaseDate() == null ){
           throw new MovieAlreadyExistsException("Release date cannot be empty");
       }
+      if(movie.getDirectors() == null || movie.getDirectors().toString().trim().isEmpty()){
+          throw new DirectorNotFoundException("Director cannot be empty or null");
+      }
 
       movieRepository.save(movie);
     }
@@ -118,8 +127,6 @@ public class MovieService {
         }else{
             throw new TitleNotFoundException("There is no movie with given title");
         }
-
-
     }
 
      public List<MovieRatingDTO> getByRating(String weightedRating){
@@ -149,6 +156,24 @@ public class MovieService {
           }
 
           return moviesRated;
+         }
+
+         public List<MovieRatingDTO> getMoviesByDirector(String name){
+        List<MovieRatingDTO> allMovies = movieRepository.findAll().stream()
+                .map(this::convertEntityToDTO)
+                .toList();
+
+          List<MovieRatingDTO> allMoviesOfDirector = new ArrayList<>();
+
+          for(MovieRatingDTO movie : allMovies){
+              if(movie.getDirectors().toString().toLowerCase().contains(name.toLowerCase())){
+                  allMoviesOfDirector.add(movie);
+              }
+          }
+          if(allMoviesOfDirector.isEmpty()){
+              throw new DirectorNotFoundException("There no movie title related to given Director");
+          }
+          return allMoviesOfDirector;
          }
 
          //helper method that checks number field contains character if it does return true.

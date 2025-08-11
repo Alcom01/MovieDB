@@ -2,7 +2,6 @@ package com.movies.mdbs.entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -22,26 +21,28 @@ public class Rating {
     private Double voteCount;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @NotNull
     private Double weightedRating;
 
 
-    private  static final  double C = 7.0;
-
-
-    private  static final double m = 1000;
-
-    private double computeWeightedRating(double R, double v){
-        return  (v / (v + Rating.m)) * R + (Rating.m / (v + Rating.m)) * Rating.C;
+    @PrePersist
+    protected  void onCreate(){
+        this.weightedRating = computeWeightedRating(this.voteAverage,this.voteCount);
     }
 
-    public Rating(Double popularity,Double voteAverage, Double voteCount) {
 
+
+
+    public Rating(Double popularity,Double voteAverage, Double voteCount) {
         this.popularity = popularity;
         this.voteAverage = voteAverage;
         this.voteCount = voteCount;
         this.weightedRating = computeWeightedRating(voteAverage,voteCount);
 
     }
+    private double computeWeightedRating(double R, double v){
+        return  (v / (v + 1000)) * R + (1000 / (v +1000)) * 7;
+    }
+
+
 
 }

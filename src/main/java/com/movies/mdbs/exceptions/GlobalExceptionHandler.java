@@ -67,5 +67,15 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(moviesNotFoundBody,notFound);
     }
+    @ExceptionHandler(value={DirectorNotFoundException.class})
+    public ResponseEntity<Object> handleDirectorNotFoundException(DirectorNotFoundException ex){
+        HttpStatus notFound = HttpStatus.NOT_FOUND;
+        DirectorNotFoundBody directorNotFoundBody = new DirectorNotFoundBody(
+                ex.getMessage(),
+                notFound,
+                ZonedDateTime.now()
+        );
+        return new ResponseEntity<>(directorNotFoundBody,notFound);
+    }
 
 }

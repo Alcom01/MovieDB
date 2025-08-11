@@ -1,8 +1,10 @@
 package com.movies.mdbs.dto;
 
+import com.movies.mdbs.entities.Director;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class MovieRatingDTO {
@@ -12,4 +14,5 @@ public class MovieRatingDTO {
     private LocalDate releaseDate;
     private Double popularity;
     private Double weightedRating;
+    private List<Director> directors;
 }
