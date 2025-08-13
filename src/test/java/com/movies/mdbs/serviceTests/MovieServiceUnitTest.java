@@ -46,6 +46,7 @@ public class MovieServiceUnitTest {
         movie.setTitle("SAW");
         movie.setDescription("John Kramer a Engineering prodigy starts playing games with folks who do not value their lives.");
         movie.setReleaseDate(LocalDate.of(2004, Month.OCTOBER,29));
+        movie.setTmdbId(1L);
 
         rating = new Rating();
         rating.setId(1L);
@@ -76,8 +77,8 @@ public class MovieServiceUnitTest {
         var result = movieService.getAllMovies();
 
         //Assert
-        assertEquals(1,result.size());
-        assertEquals("SAW",result.get(0).getTitle());
+        assertAll(() -> assertEquals(1,result.size()),
+                  () -> assertEquals("SAW",result.get(0).getTitle()));
     }
 
     @Test
@@ -99,15 +100,19 @@ public class MovieServiceUnitTest {
 
         var dto = result.get(0);
 
-        assertEquals("SAW",dto.getTitle());
-        assertEquals("John Kramer a Engineering prodigy starts playing games with folks who do not value their lives.",
-                dto.getDescription());
-        assertEquals(LocalDate.of(2004,Month.OCTOBER,29),dto.getReleaseDate());
-        assertEquals(60000.50,dto.getPopularity());
-
-        double expectedWeightedRating =  ((1000.0 / (1000.0 + 1000.0)) * 87.5 + (1000.0 / (1000.0 + 1000.0)) * 7.0);
-        assertEquals(expectedWeightedRating,dto.getWeightedRating());
+        double expectedWeightedRating =
+                ((1000.0 / (1000.0 + 1000.0)) * 87.5 + (1000.0 / (1000.0 + 1000.0)) * 7.0);
+        //Assert
+        assertAll(() -> assertEquals("SAW",dto.getTitle()),
+                  () ->  assertEquals("John Kramer a Engineering prodigy starts playing games with folks who do not value their lives.",
+                        dto.getDescription()),
+                  () -> assertEquals(LocalDate.of(2004,Month.OCTOBER,29),dto.getReleaseDate()),
+                  () ->  assertEquals(60000.50,dto.getPopularity()),
+                  () ->  assertEquals(expectedWeightedRating,dto.getWeightedRating()),
+                  () -> assertEquals("James Wan",dto.getDirectors().get(0).getName())
+        );
     }
+
     @Test
     void getMoviesByTitle_shouldReturnFilteredMovieIfTitleMatches(){
         // Arrange
@@ -117,8 +122,30 @@ public class MovieServiceUnitTest {
         var result = movieService.getMoviesByTitle("SAW");
 
         // Assert
-        assertEquals(1,result.size());
-        assertEquals("SAW",result.get(0).getTitle());
+        assertAll(() -> assertEquals(1,result.size()),
+                  ()  -> assertEquals("SAW",result.get(0).getTitle())
+        );
+    }
+    @Test
+
+    void getMoviesByTitle_shouldMapMovieToDtoCorrectly(){
+        // Arrange
+        when(movieRepository.findAll()).thenReturn(List.of(movie));
+        // Act
+        var result = movieService.getMoviesByTitle("SAW");
+        var dto = result.get(0);
+        double expectedWeightedRating =
+                ((1000.0 / (1000.0 + 1000.0)) * 87.5 + (1000.0 / (1000.0 + 1000.0)) * 7.0);
+        // Assert
+        assertAll(() -> assertEquals("SAW",dto.getTitle()),
+                () ->  assertEquals("John Kramer a Engineering prodigy starts playing games with folks who do not value their lives.",
+                        dto.getDescription()),
+                () -> assertEquals(LocalDate.of(2004,Month.OCTOBER,29),dto.getReleaseDate()),
+                () ->  assertEquals(60000.50,dto.getPopularity()),
+                () ->  assertEquals(expectedWeightedRating,dto.getWeightedRating()),
+                ()  -> assertEquals("James Wan",dto.getDirectors().get(0).getName())
+                );
+
 
     }
 
@@ -136,8 +163,11 @@ public class MovieServiceUnitTest {
     void getMoviesByTitle_shouldThrowExceptionIfTitleIsEmptyOrNull(){
 
         //Assert & Throw
-         assertThrows(TitleNotFoundException.class ,()-> movieService.getMoviesByTitle(""));
-         assertThrows(TitleNotFoundException.class,() -> movieService.getMoviesByTitle(null));
+        assertAll("Invalid input",
+                () -> assertThrows(TitleNotFoundException.class,()->movieService.getMoviesByTitle("")),
+                () -> assertThrows(TitleNotFoundException.class,()->movieService.getMoviesByTitle(" ")),
+                () -> assertThrows(TitleNotFoundException.class,()->movieService.getMoviesByTitle(null))
+                );
 
 
     }
@@ -160,6 +190,67 @@ public class MovieServiceUnitTest {
     }
 
     @Test
+    void getMoviesByYear_shouldMapDtoCorrectly() throws Exception {
+
+        // mocks don't store changes automatically so I had to create fakeDb which will serve as database.
+        List<Movie> fakeDb = new ArrayList<>();
+         fakeDb.add(movie);
+         double expectedWeightedRating = movie.getRating().getWeightedRating();
+         double popularity = movie.getRating().getPopularity();
+
+        when(movieRepository.findAll()).thenAnswer(invocation -> new ArrayList<>(fakeDb));
+        when(movieRepository.save(any(Movie.class))).thenAnswer(invocation ->{
+                    Movie m = invocation.getArgument(0);
+                    fakeDb.add(m);
+                    return m;
+                }
+        );
+        // setting entities
+        Movie movie1 = new Movie();
+        movie1.setTmdbId(2L);
+        movie1.setId(2L);
+        movie1.setTitle("Charlie and the Chocolate Factory");
+        movie1.setDescription("Story about Willy Wonkas factory.");
+        movie1.setReleaseDate(LocalDate.of(2004,8,12));
+
+        Rating rating1 = new Rating();
+        rating1.setId(2L);
+        rating1.setPopularity(5000.0);
+        rating1.setVoteAverage(1500.0);
+        rating1.setVoteCount(100.0);
+
+        double expectedWeightedRating1 = (100.0/ (100.0 + 1000.0)) * 1500.0 + (1000.0 / (1000.0 + 1000.0)) * 7.0;
+        rating1.setWeightedRating(expectedWeightedRating1);
+        Director director1 = new Director("Tim Burton", "Tim Burton");
+        List<Director> directorList = new ArrayList<>();
+        directorList.add(director1);
+        movie1.setRating(rating1);
+        movie1.setDirectors(directorList);
+
+        movieService.addMovie(movie1);
+        fakeDb.add(movie1);
+        var result = movieService.getMoviesByYear("2004");
+        var dto = result.get(1);
+        var dto1 = result.get(0);
+        assertAll(
+                () -> assertEquals("SAW",dto1.getTitle()),
+                () -> assertEquals("John Kramer a Engineering prodigy starts playing games with folks who do not value their lives.",dto1.getDescription()),
+                () -> assertEquals(LocalDate.of(2004,10,29),dto1.getReleaseDate()),
+                () -> assertEquals(popularity,dto1.getPopularity()),
+                () -> assertEquals(expectedWeightedRating,dto1.getWeightedRating()),
+                () -> assertEquals("James Wan",dto1.getDirectors().get(0).getName()),
+
+                () -> assertEquals("Charlie and the Chocolate Factory",dto.getTitle()),
+                () -> assertEquals("Story about Willy Wonkas factory.",dto.getDescription()),
+                () -> assertEquals(LocalDate.of(2004,8,12),dto.getReleaseDate()),
+                () -> assertEquals(5000.0,dto.getPopularity()),
+                () -> assertEquals(expectedWeightedRating1,dto.getWeightedRating()),
+                () -> assertEquals("Tim Burton",dto.getDirectors().get(1).getName())
+        );
+
+    }
+
+    @Test
     void getMoviesByYear_shouldThrowExceptionIfYearNotMatches(){
         // Arrange
         when(movieRepository.findAll()).thenReturn(List.of(movie));
@@ -179,6 +270,7 @@ public class MovieServiceUnitTest {
 
     @Test
     void getMoviesByYear_shouldThrowExceptionIfYearContainLetters(){
+
           assertAll(() -> assertThrows(InvalidYearException.class,()->movieService.getMoviesByYear("20a4")),
                     () -> assertThrows(InvalidYearException.class,()->movieService.getMoviesByYear("abcd")),
                     () -> assertThrows(InvalidYearException.class,()->movieService.getMoviesByYear("20@4")),
@@ -217,12 +309,21 @@ public class MovieServiceUnitTest {
         movie1.setReleaseDate( LocalDate.of(2013,Month.FEBRUARY,3));
         movie1.setRating(rating1);
 
+        Director director1 = new Director();
+        director1.setId(2L);
+        director1.setOriginalName("Steve Mcqueen");
+        director1.setName("Steve Mcqueen");
+
+        List<Director> directors = new ArrayList<>();
+        directors.add(director1);
         movieService.addMovie(movie1);
 
         var result = movieService.getAllMovies();
 
+
         assertAll(() -> assertEquals(2,result.size()),
                   () -> assertEquals("Shame",result.get(1).getTitle()));
+ //                 () -> assertEquals("Steve Mcqueen",result.get(1).getDirectors().get(1).getName()));
 
         verify(movieRepository).save(movie1);
 
@@ -297,7 +398,7 @@ public class MovieServiceUnitTest {
         var directors= result.get(0).getDirectors();
         var moviesByDirectors = movieService.getMoviesByDirector(directors.toString());
 
-        assertEquals(1,result.size());
+        assertEquals(1, directors.size());
         assertEquals("SAW",moviesByDirectors.get(0).getTitle());
         assertTrue(directors.toString().contains("James Wan"));
     }

@@ -3,7 +3,6 @@ import com.movies.mdbs.dto.MovieRatingDTO;
 import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.exceptions.*;
 import com.movies.mdbs.repository.MovieRepository;
-import com.movies.mdbs.repository.RatingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
