@@ -1,11 +1,11 @@
 package com.movies.mdbs.serviceTests;
 
 
+import com.movies.mdbs.entities.Director;
 import com.movies.mdbs.entities.Movie;
 import com.movies.mdbs.entities.Rating;
 import com.movies.mdbs.exceptions.*;
 import com.movies.mdbs.repository.MovieRepository;
-import com.movies.mdbs.repository.RatingRepository;
 import com.movies.mdbs.service.MovieService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +37,7 @@ public class MovieServiceUnitTest {
 
     private Movie movie;
     private Rating rating;
+    private Director director;
 
     @BeforeEach
     void setUp(){
@@ -53,8 +54,17 @@ public class MovieServiceUnitTest {
         rating.setVoteCount(1000.0);
         rating.setWeightedRating(((rating.getVoteCount() / (rating.getVoteCount() + 1000)) * rating.getVoteAverage() + (1000 / (rating.getVoteCount() + 1000)) * 7.0));
 
+         director = new Director();
+         director.setId(1L);
+         director.setName("James Wan");
+         director.setOriginalName("James Wan");
+
+         List<Director> directors = new ArrayList<>();
+         directors.add(director);
+
 
         movie.setRating(rating);
+        movie.setDirectors(directors);
 
     }
     @Test
@@ -225,6 +235,13 @@ public class MovieServiceUnitTest {
     }
 
     @Test
+    void addMovie_ShouldThrowExceptionIfDirectorIsEmptyOrNull(){
+        assertAll(() -> assertThrows(DirectorNotFoundException.class,() -> movieService.getMoviesByDirector("")),
+                  () -> assertThrows(DirectorNotFoundException.class,() -> movieService.getMoviesByDirector(null))
+        );
+    }
+
+    @Test
     void deleteMovie_shouldDeleteIfMovieIsPresent() throws Exception {
         when(movieRepository.findByTitle("SAW")).thenReturn(Optional.of(movie));
 
@@ -272,8 +289,23 @@ public class MovieServiceUnitTest {
                   () -> assertThrows(InvalidRatingException.class,() -> movieService.getByRating(null))
         );
     }
+    @Test
+    void getMoviesByDirector_shouldReturnMoviesIfExists(){
+        when(movieRepository.findAll()).thenReturn(List.of(movie));
 
+        var result = movieService.getAllMovies();
+        var directors= result.get(0).getDirectors();
+        var moviesByDirectors = movieService.getMoviesByDirector(directors.toString());
 
+        assertEquals(1,result.size());
+        assertEquals("SAW",moviesByDirectors.get(0).getTitle());
+        assertTrue(directors.toString().contains("James Wan"));
+    }
+    @Test
+    void getMoviesByDirector_shouldThrowExceptionIfNotExists(){
+        when(movieRepository.findAll()).thenReturn(List.of(movie));
+        assertThrows(DirectorNotFoundException.class, () -> movieService.getMoviesByDirector("Christopher Nolan"));
+    }
 
 
 
