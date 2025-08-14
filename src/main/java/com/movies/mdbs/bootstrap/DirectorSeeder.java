@@ -59,7 +59,7 @@ public class DirectorSeeder implements CommandLineRunner {
                       movieRepository.save(movie);
 
                   }
-              } catch (Exception e) {
+              } catch(Exception e) {
                   System.out.println("Error fetching directors for movie " + movie.getTitle() + ": " + e.getMessage());
               }
           }
